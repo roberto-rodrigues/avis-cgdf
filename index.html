@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AViS - Assistente Virtual do Servidor | CGDF Digital</title>
+  <meta name="description" content="Protótipo do AViS, assistente virtual com IA (RAG) que orienta servidores da CGDF nos procedimentos do SEI com base nos POPs oficiais e na LC 840/2011. 3º Prêmio Inspiração de Inovação.">
+  <meta name="color-scheme" content="light dark">
+
+  <!-- Fonts with System Fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons with CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+
+</head>
+<body data-theme="dark">
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Header / Navbar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-badge">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="brand-text">
+          <h1>AViS <span class="brand-highlight">CGDF</span></h1>
+          <p>Assistente Virtual do Servidor • 3º Prêmio Inspiração de Inovação</p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-btn active" data-tab="simulator" role="tab" aria-selected="true">
+          <i class="fa-solid fa-desktop"></i>
+          <span>Aplicação Web & Chatbot</span>
+        </button>
+        <button class="nav-btn" data-tab="architecture" role="tab" aria-selected="false">
+          <i class="fa-solid fa-diagram-project"></i>
+          <span>Arquitetura em 3 Fases</span>
+        </button>
+      </nav>
+
+      <div class="header-actions">
+        <button id="themeToggle" class="icon-btn" title="Alternar Tema Claro/Escuro" aria-label="Alternar Tema">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="main-container">
+
+    <!-- TAB 1: SIMULATOR & WEB APPLICATION -->
+    <section id="tab-simulator" class="tab-content active">
+      <div class="simulator-layout">
+        
+        <!-- Control Sidebar -->
+        <aside class="sim-sidebar">
+          
+          <!-- Channel Switcher Card -->
+          <div class="card channel-card">
+            <div class="card-header-clean">
+              <h3><i class="fa-solid fa-sliders"></i> Canal de Acesso</h3>
+              <span class="badge-mini">UX Sandbox</span>
+            </div>
+            <p class="sidebar-desc">Alterne entre a aplicação web da intranet ou a versão Telegram:</p>
+            <div class="segmented-control">
+              <button class="segment-btn active" data-channel="intranet">
+                <i class="fa-solid fa-globe"></i> Web Intranet
+              </button>
+              <button class="segment-btn" data-channel="telegram">
+                <i class="fa-brands fa-telegram"></i> Telegram Bot
+              </button>
+            </div>
+          </div>
+
+          <!-- Perguntas rápidas -->
+          <div class="card explorer-card">
+            <div class="card-header-clean">
+              <h3><i class="fa-solid fa-bolt"></i> Perguntas rápidas</h3>
+            </div>
+            <p class="sidebar-desc">Toque em um tema e eu explico o passo a passo:</p>
+
+            <div class="chip-list">
+              <button class="prompt-chip" data-prompt="Como marcar, remarcar ou suspender minhas férias no SEI?">
+                <span>🏖️ Férias</span><i class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button class="prompt-chip" data-prompt="Como peço o abono de ponto anual de 5 dias?">
+                <span>📅 Abono de 5 dias</span><i class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button class="prompt-chip" data-prompt="Como funciona o abono no dia do meu aniversário (Lei 7.826/2025)?">
+                <span>🎂 Abono de aniversário</span><i class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button class="prompt-chip" data-prompt="Como solicito o auxílio alimentação/refeição pelo SEI?">
+                <span>🍽️ Auxílio alimentação</span><i class="fa-solid fa-arrow-right"></i>
+              </button>
+              <button class="prompt-chip" data-prompt="Quais as regras para pós-graduação stricto sensu (Portaria 32/2026)?">
+                <span>🎓 Pós-graduação</span><i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+
+            <div class="chip-divider"><i class="fa-solid fa-lock"></i> Consulta com login (Fase 3)</div>
+            <div class="chip-list">
+              <button class="prompt-chip auth-demo" data-prompt="[FASE 3] Consultar meu saldo individual de férias e abonos no SIGRH">
+                <span>Meu saldo de férias e abonos</span><i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Status (slim) -->
+          <div class="card status-card status-slim">
+            <span class="status-indicator online"></span>
+            <span class="status-text">Base indexada · <strong>5 POPs + LC 840</strong></span>
+          </div>
+
+        </aside>
+
+        <!-- Stage Container (Viewport) -->
+        <div class="sim-stage" id="stageContainer">
+          
+          <!-- VIEW 1: INTRANET DEDICATED PORTAL -->
+          <div class="intranet-frame active-frame" id="intranetFrame">
+            
+            <!-- Intranet Portal Topbar -->
+            <div class="intra-topbar">
+              <div class="intra-brand">
+                <i class="fa-solid fa-building-columns"></i>
+                <div class="intra-brand-text">
+                  <span class="intra-title">INTRANET CGDF</span>
+                  <span class="intra-subtitle">Governo do Distrito Federal</span>
+                </div>
+              </div>
+              <div class="intra-menu">
+                <span class="menu-item active"><i class="fa-solid fa-house"></i> Início</span> 
+                <span class="menu-item"><i class="fa-solid fa-book-bookmark"></i> POPs & Normas</span> 
+                <span class="menu-item"><i class="fa-solid fa-file-invoice"></i> SEI/GDF</span>
+                <span class="menu-item user-profile-badge">
+                  <i class="fa-solid fa-circle-user"></i> Roberto R.
+                </span>
+              </div>
+            </div>
+            
+            <!-- Intranet Hero Section -->
+            <div class="intra-hero">
+              <div class="hero-content">
+                <div class="hero-badge"><i class="fa-solid fa-sparkles"></i> Assistente Virtual com IA</div>
+                <h2>Olá! Como posso ajudar hoje? 👋</h2>
+                <p>Tire dúvidas sobre férias, abonos, benefícios e processos no SEI — em linguagem simples.</p>
+              </div>
+              <div class="hero-search-bar">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="popSearchInput" placeholder="Buscar um tema (ex: férias, abono, pós-graduação)...">
+                <span class="search-kbd">Ctrl + K</span>
+              </div>
+            </div>
+
+            <!-- Intranet Main Body -->
+            <div class="intra-app-body">
+              
+              <!-- POP Shortcut Cards Grid -->
+              <div class="pop-cards-grid" id="popCardsGrid">
+                
+                <div class="pop-card card-amber" data-prompt="Como marcar, remarcar ou suspender minhas férias no SEI?">
+                  <div class="pop-card-icon"><i class="fa-solid fa-umbrella-beach"></i></div>
+                  <div class="pop-card-info">
+                    <h4>Férias</h4>
+                    <p>Marcar, remarcar ou suspender</p>
+                  </div>
+                </div>
+
+                <div class="pop-card card-emerald" data-prompt="Como peço o abono de ponto anual de 5 dias?">
+                  <div class="pop-card-icon"><i class="fa-solid fa-calendar-minus"></i></div>
+                  <div class="pop-card-info">
+                    <h4>Abono de ponto</h4>
+                    <p>5 dias e aniversário</p>
+                  </div>
+                </div>
+
+                <div class="pop-card card-blue" data-prompt="Quais as regras para pós-graduação stricto sensu (Portaria 32/2026)?">
+                  <div class="pop-card-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                  <div class="pop-card-info">
+                    <h4>Pós-graduação</h4>
+                    <p>Reduzir jornada p/ estudar</p>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- AI Embedded Chat Panel -->
+              <div class="intra-chat-panel">
+                <div class="panel-header">
+                  <div class="panel-title-group">
+                    <div class="bot-status-avatar">
+                      <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                      <h3>AViS</h3>
+                      <p>Assistente Virtual do Servidor</p>
+                    </div>
+                  </div>
+                  <div class="panel-header-actions">
+                    <span class="live-tag"><span class="pulse-dot"></span> online</span>
+                    <button class="icon-tool-btn" id="clearChatBtn" title="Limpar Conversa"><i class="fa-solid fa-rotate-left"></i></button>
+                  </div>
+                </div>
+
+                <div class="panel-body" id="intraChatBody">
+                  <div class="message bot-msg">
+                    <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+                    <div class="msg-content">
+                      <div class="msg-header-name">AViS CGDF</div>
+                      <p>Oi! 👋 Eu sou o <strong>AViS</strong>, seu assistente aqui na CGDF.</p>
+                      <p>Me conta sua dúvida sobre férias, abonos ou processos no SEI que eu te explico o passo a passo. 😊</p>
+
+                      <div class="inline-actions-group">
+                        <button class="inline-btn" data-prompt="Como marcar, remarcar ou suspender minhas férias no SEI?"><i class="fa-solid fa-umbrella-beach"></i> Férias</button>
+                        <button class="inline-btn" data-prompt="Como peço o abono de ponto anual de 5 dias?"><i class="fa-solid fa-calendar-check"></i> Abono</button>
+                        <button class="inline-btn" data-prompt="Quais as regras para pós-graduação stricto sensu (Portaria 32/2026)?"><i class="fa-solid fa-graduation-cap"></i> Pós-graduação</button>
+                      </div>
+
+                      <span class="msg-time">11:30</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Input Footer -->
+                <div class="panel-footer">
+                  <div class="input-bar-container">
+                    <button class="input-icon-btn" title="Anexar arquivo simulado"><i class="fa-solid fa-paperclip"></i></button>
+                    <input type="text" id="intraInput" placeholder="Escreva sua dúvida sobre normas, POPs ou processo no SEI..." autocomplete="off">
+                    <button id="intraSendBtn" class="send-action-btn">
+                      <span>Enviar</span>
+                      <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- VIEW 2: TELEGRAM WEB UI MOCKUP -->
+          <div class="telegram-frame" id="telegramFrame">
+            
+            <div class="tg-header">
+              <div class="tg-avatar">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+              <div class="tg-title-block">
+                <h4>AViS <i class="fa-solid fa-circle-check verified-icon"></i></h4>
+                <span class="tg-status">online</span>
+              </div>
+              <div class="tg-actions">
+                <button class="tg-icon-btn" title="Buscar no chat"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <button class="tg-icon-btn" title="Mais opções"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+              </div>
+            </div>
+
+            <div class="tg-body" id="tgChatBody">
+              <div class="chat-date-pill">Hoje</div>
+
+              <div class="message bot-msg">
+                <div class="msg-content">
+                  <p>Oi! 👋 Eu sou o <strong>AViS</strong>, assistente dos servidores da CGDF.</p>
+                  <p>Me manda sua dúvida sobre férias, abonos ou auxílios e eu te explico o passo a passo. 😊</p>
+
+                  <div class="tg-keyboard">
+                    <button class="tg-kb-btn" data-prompt="Como marcar, remarcar ou suspender minhas férias no SEI?">🏖️ Férias</button>
+                    <button class="tg-kb-btn" data-prompt="Como peço o abono de ponto anual de 5 dias?">📅 Abono</button>
+                    <button class="tg-kb-btn" data-prompt="Como solicito o auxílio alimentação/refeição pelo SEI?">🍽️ Auxílio</button>
+                  </div>
+
+                  <span class="msg-time">11:30 <i class="fa-solid fa-check-double tg-read"></i></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="tg-footer">
+              <div class="chat-input-wrapper">
+                <button class="tg-footer-btn" title="Emojis"><i class="fa-regular fa-face-smile"></i></button>
+                <input type="text" id="tgInput" placeholder="Escreva uma mensagem..." autocomplete="off">
+                <button class="tg-footer-btn" title="Anexo"><i class="fa-solid fa-paperclip"></i></button>
+                <button id="tgSendBtn" class="send-btn" title="Enviar">
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: ARCHITECTURE & SECURITY -->
+    <section id="tab-architecture" class="tab-content">
+      <div class="arch-container">
+        <div class="section-title">
+          <h2><i class="fa-solid fa-network-wired"></i> Arquitetura Técnica de Execução em 3 Fases</h2>
+          <p>Visão geral da evolução: MVP no Telegram (Fase 1), Portal na Intranet (Fase 2) e Integração Segura com SIGRH (Fase 3).</p>
+        </div>
+
+        <!-- Evidências do Problema -->
+        <div class="evidence-block">
+          <h3 class="block-title"><i class="fa-solid fa-triangle-exclamation"></i> O problema que motivou a ideia</h3>
+          <div class="evidence-list" id="evidenceList"><!-- preenchido por js/data/impact.js --></div>
+        </div>
+
+        <!-- Métricas de Impacto (projeções) -->
+        <div class="impact-block">
+          <h3 class="block-title"><i class="fa-solid fa-chart-line"></i> Impacto e benefícios esperados</h3>
+          <p class="block-note"><i class="fa-solid fa-circle-info"></i> Proposta na categoria <strong>Ideia</strong>: os valores marcados como <em>estimativa</em> são projeções fundamentadas, não resultados já medidos.</p>
+          <div class="metrics-grid" id="metricsGrid"><!-- preenchido por js/data/impact.js --></div>
+        </div>
+
+        <div class="arch-grid">
+          <div class="arch-card highlight-card">
+            <div class="arch-icon"><i class="fa-brands fa-telegram"></i></div>
+            <h3>1. MVP Telegram + Supabase</h3>
+            <p>Carga de dados vetoriais e bot conversacional leve:</p>
+            <ul>
+              <li><i class="fa-solid fa-check"></i> <strong>Supabase Vector DB (pgvector):</strong> Armazenamento dos normativos e POPs.</li>
+              <li><i class="fa-solid fa-check"></i> <strong>Telegram API:</strong> Atendimento imediato no celular do servidor.</li>
+              <li><i class="fa-solid fa-check"></i> <strong>Zero Risco LGPD:</strong> Apenas normativos e procedimentos públicos.</li>
+            </ul>
+          </div>
+
+          <div class="arch-card">
+            <div class="arch-icon"><i class="fa-solid fa-globe"></i></div>
+            <h3>2. Portal Web na Intranet CGDF</h3>
+            <p>Aplicação corporativa dedicada no ambiente de trabalho:</p>
+            <ul>
+              <li><i class="fa-solid fa-check"></i> <strong>Portal Web Interativo:</strong> Busca unificada e cards de POPs mais acessados.</li>
+              <li><i class="fa-solid fa-check"></i> <strong>Instrução no SEI:</strong> Indicação precisa de tipos de processos e anexos.</li>
+              <li><i class="fa-solid fa-check"></i> <strong>Transição On-Premise:</strong> Suporte a LLMs locais (Llama 3 / Qwen).</li>
+            </ul>
+          </div>
+
+          <div class="arch-card">
+            <div class="arch-icon"><i class="fa-solid fa-key"></i></div>
+            <h3>3. Integração SIGRH + SSO</h3>
+            <p>Acesso individualizado a informações funcionais sensíveis:</p>
+            <ul>
+              <li><i class="fa-solid fa-shield-halved"></i> <strong>Security & Privacy by Design:</strong> Login via SSO (Gov.br / GDF SSO).</li>
+              <li><i class="fa-solid fa-lock"></i> <strong>Consulta Isolada:</strong> Saldo de férias, abonos e simulação de aposentadoria.</li>
+              <li><i class="fa-solid fa-user-shield"></i> <strong>Total LGPD:</strong> Sigilo e rastreabilidade com auditoria.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="roadmap-box">
+          <h3><i class="fa-solid fa-timeline"></i> Linha do Tempo de Implementação</h3>
+          <div class="timeline">
+            <div class="t-step active">
+              <div class="t-dot">1</div>
+              <h4>Fase 1: MVP Nuvem (Telegram + Supabase)</h4>
+              <p>Ingestão de dados no Supabase e bot no Telegram para atendimento RAG rápido.</p>
+            </div>
+            <div class="t-step">
+              <div class="t-dot">2</div>
+              <h4>Fase 2: Portal Web Intranet CGDF</h4>
+              <p>Implantação da Aplicação Web dedicada na rede da CGDF integrada aos sistemas.</p>
+            </div>
+            <div class="t-step">
+              <div class="t-dot">3</div>
+              <h4>Fase 3: Módulo SIGRH Autenticado</h4>
+              <p>Conexão autenticada por usuário via SSO para dados funcionais restritos.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Como funciona o RAG (transparência técnica) -->
+        <div class="rag-explain">
+          <h3 class="block-title"><i class="fa-solid fa-diagram-project"></i> Como o assistente encontra a resposta (RAG)</h3>
+          <p class="block-note">Este protótipo usa recuperação real: indexa passagens dos POPs e ranqueia por relevância (BM25) — não é um roteiro de respostas fixas. Cada resposta traz o bloco “Fontes consultadas” com o trecho de origem.</p>
+          <div class="rag-steps">
+            <div class="rag-step"><span class="rag-step-num">1</span><h4>Pergunta</h4><p>O servidor escreve em linguagem natural (ex.: “quero remarcar minhas férias”).</p></div>
+            <div class="rag-step"><span class="rag-step-num">2</span><h4>Recuperação</h4><p>O motor normaliza o texto e pontua cada passagem dos POPs com BM25.</p></div>
+            <div class="rag-step"><span class="rag-step-num">3</span><h4>Fundamentação</h4><p>Seleciona o POP mais relevante e monta o passo a passo no SEI.</p></div>
+            <div class="rag-step"><span class="rag-step-num">4</span><h4>Citação</h4><p>Exibe a fonte (PDF), o trecho recuperado e o grau de relevância.</p></div>
+          </div>
+        </div>
+
+        <!-- Sustentabilidade (ASG) + ODS -->
+        <div class="asg-block">
+          <h3 class="block-title"><i class="fa-solid fa-seedling"></i> Sustentabilidade (ASG) e Agenda 2030</h3>
+          <div class="asg-grid" id="asgGrid"><!-- preenchido por js/data/impact.js --></div>
+          <div class="ods-list" id="odsList"><!-- preenchido por js/data/impact.js --></div>
+        </div>
+      </div>
+    </section>
+
+
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>CGDF Digital • Projeto para o 3º Prêmio Inspiração de Inovação da CGDF • 2026</p>
+    </div>
+  </footer>
+
+  <script src="avis-bundle.js?v=2"></script>
+</body>
+</html>
